@@ -3,77 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Футбольные Вероятности</title>
-    <style>
-        /* Добавляем стили для вкладок */
-        .tab {
-            display: none;
-        }
-        .tab-links {
-            display: flex;
-            cursor: pointer;
-        }
-        .tab-links div {
-            padding: 10px;
-            border: 1px solid #ccc;
-            margin-right: 5px;
-        }
-        .tab-links div:hover {
-            background-color: #f0f0f0;
-        }
-    </style>
+    <title>Google Таблица</title>
 </head>
 <body>
-
-    <h1>Футбольные Вероятности</h1>
-
-    <div class="tab-links">
-        <div onclick="showTab(1)">Таблица 1</div>
-        <div onclick="showTab(2)">Таблица 2</div>
-        <div onclick="showTab(3)">Таблица 3</div>
-    </div>
-
-    <!-- Вкладки -->
-    <div id="tab1" class="tab"></div>
-    <div id="tab2" class="tab"></div>
-    <div id="tab3" class="tab"></div>
-
-    <script>
-        // Функция для отображения вкладок
-        function showTab(tabIndex) {
-            const tabs = document.querySelectorAll('.tab');
-            tabs.forEach(tab => tab.style.display = 'none');
-            document.getElementById('tab' + tabIndex).style.display = 'block';
-        }
-
-        // Функция для загрузки данных из Google Таблицы
-        function fetchData(spreadsheetId, tabName) {
-            const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv`;
-            fetch(url)
-                .then(response => response.text())
-                .then(csv => {
-                    const data = csv.split('\n').map(row => row.split(','));
-                    const tableContainer = document.getElementById(tabName);
-                    const table = document.createElement('table');
-                    data.forEach(row => {
-                        const tr = document.createElement('tr');
-                        row.forEach(cell => {
-                            const td = document.createElement('td');
-                            td.textContent = cell;
-                            tr.appendChild(td);
-                        });
-                        table.appendChild(tr);
-                    });
-                    tableContainer.innerHTML = ''; // Очистить контейнер перед добавлением новой таблицы
-                    tableContainer.appendChild(table);
-                });
-        }
-
-        // Загрузка данных для каждой вкладки
-        fetchData('2PACX-1vRxi76pKuoMHSgEqMC5r8m-XSRZkr0-FcCZQ6JopnYQQlOlqyMCMepMQz2FXdaYql6ulV4IICefBOrF', 'tab1');
-        fetchData('2PACX-1vTBVQu2ExCdmbjNXqoyjT8duWD-ORCFTgPGXrOF_VhbWKyVcpCob7z2GTcfIVAgnen-m3Sq6qfGYT8S', 'tab2');
-        fetchData('https://docs.google.com/spreadsheets/d/e/2PACX-1vT_dUrHB4g2KjkfPSGHMCjDaaCDHsYnDXb0DsDxEgHoyfyNQNSbicagtY3MJgPIfZGGUpkxxgaHVE6C/pubhtml?gid=116256188&single=true', 'tab3');
-    </script>
-
+    <h1>Моя Google Таблица</h1>
+    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT_dUrHB4g2KjkfPSGHMCjDaaCDHsYnDXb0DsDxEgHoyfyNQNSbicagtY3MJgPIfZGGUpkxxgaHVE6C/pubhtml" width="100%" height="600"></iframe>
 </body>
 </html>
