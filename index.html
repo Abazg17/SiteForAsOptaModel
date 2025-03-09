@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Футбольные Вероятности</title>
+    <style>
+        /* Добавляем стили для вкладок */
+        .tab {
+            display: none;
+        }
+        .tab-links {
+            display: flex;
+            cursor: pointer;
+        }
+        .tab-links div {
+            padding: 10px;
+            border: 1px solid #ccc;
+            margin-right: 5px;
+        }
+        .tab-links div:hover {
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Футбольные Вероятности</h1>
+
+    <div class="tab-links">
+        <div onclick="showTab(1)">Таблица 1</div>
+        <div onclick="showTab(2)">Таблица 2</div>
+        <div onclick="showTab(3)">Таблица 3</div>
+    </div>
+
+    <!-- Вкладки -->
+    <div id="tab1" class="tab"></div>
+    <div id="tab2" class="tab"></div>
+    <div id="tab3" class="tab"></div>
+
+    <script>
+        // Функция для отображения вкладок
+        function showTab(tabIndex) {
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => tab.style.display = 'none');
+            document.getElementById('tab' + tabIndex).style.display = 'block';
+        }
+
+        // Функция для загрузки данных из Google Таблицы
+        function fetchData(spreadsheetId, tabName) {
+            const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv`;
+            fetch(url)
+                .then(response => response.text())
+                .then(csv => {
+                    const data = csv.split('\n').map(row => row.split(','));
+                    const table = document.getElementById(tabName);
+                    table.innerHTML = '<table>';
+                    data.forEach(row => {
+                        table.innerHTML += '<tr>' + row.map(cell => `<td>${cell}</td>`).join('') + '</tr>';
+                    });
+                    table.innerHTML += '</table>';
+                });
+        }
+
+        // Загрузка данных для каждой вкладки
+        fetchData('1Z8v_BKkAme3v-8Khrax4I5O0AnkEU1aIDyR-uRRaHow', 'tab1');
+        fetchData('2PACX-1vRxi76pKuoMHSgEqMC5r8m-XSRZkr0-FcCZQ6JopnYQQlOlqyMCMepMQz2FXdaYql6ulV4IICefBOrF', 'tab2');
+        fetchData('2PACX-1vTBVQu2ExCdmbjNXqoyjT8duWD-ORCFTgPGXrOF_VhbWKyVcpCob7z2GTcfIVAgnen-m3Sq6qfGYT8S', 'tab3');
+    </script>
+
+</body>
+</html>
