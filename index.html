@@ -75,6 +75,12 @@ const SPREADSHEET_IDS = {
     tab3: 'SPREADSHEET_ID_3'   // Замените на ID третьей таблицы
 };
 
+// Функция для вычисления градиента от белого до красного
+function getGradient(value) {
+    const percentage = Math.min(Math.max(value, 0), 100); // ограничиваем значение от 0 до 100
+    return `background: linear-gradient(to right, white ${100 - percentage}%, red ${percentage}%);`;
+}
+
 // Функция для загрузки данных из таблицы
 async function fetchData(spreadsheetId, range, tableId) {
     const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}?key=${API_KEY}`);
@@ -89,6 +95,13 @@ async function fetchData(spreadsheetId, range, tableId) {
         row.forEach(cell => {
             const td = document.createElement('td');
             td.textContent = cell;
+
+            // Применяем градиент, если значение является числом
+            const numericValue = parseFloat(cell);
+            if (!isNaN(numericValue)) {
+                td.style = getGradient(numericValue);  // Применяем стиль с градиентом
+            }
+
             tr.appendChild(td);
         });
         table.appendChild(tr);
