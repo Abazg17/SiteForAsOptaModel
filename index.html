@@ -29,6 +29,7 @@
         table {
             width: 100%;
             border-collapse: collapse;
+            table-layout: auto;  /* Автоматическая подстройка ширины ячеек под текст */
         }
         table, th, td {
             border: 1px solid black;
@@ -75,10 +76,10 @@ const SPREADSHEET_IDS = {
     tab3: 'SPREADSHEET_ID_3'   // Замените на ID третьей таблицы
 };
 
-// Функция для вычисления градиента от белого до красного
+// Функция для вычисления фона ячейки от белого до красного
 function getGradient(value) {
-    const percentage = Math.min(Math.max(value, 0), 100); // ограничиваем значение от 0 до 100
-    return `background: linear-gradient(to right, white ${100 - percentage}%, red ${percentage}%);`;
+    const percentage = Math.min(Math.max(value, 0), 100); // Ограничиваем значение от 0 до 100
+    return `background-color: rgb(${255 - (percentage * 2.55)}, ${percentage * 2.55}, ${255 - (percentage * 2.55)});`; 
 }
 
 // Функция для загрузки данных из таблицы
@@ -96,10 +97,10 @@ async function fetchData(spreadsheetId, range, tableId) {
             const td = document.createElement('td');
             td.textContent = cell;
 
-            // Применяем градиент, если значение является числом
+            // Применяем фон с градиентом, если значение является числом
             const numericValue = parseFloat(cell);
             if (!isNaN(numericValue)) {
-                td.style = getGradient(numericValue);  // Применяем стиль с градиентом
+                td.style = getGradient(numericValue);  // Применяем стиль с цветом
             }
 
             tr.appendChild(td);
