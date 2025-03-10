@@ -32,6 +32,7 @@
             table-layout: auto;  /* Автоматическая подстройка ширины ячеек под текст */
             max-height: 400px;  /* Ограничиваем высоту таблицы */
             overflow-y: auto;  /* Добавляем прокрутку по вертикали, если таблица слишком большая */
+            font-size: 12px; 
         }
         table, th, td {
             border: 1px solid black;
@@ -81,8 +82,9 @@ const SPREADSHEET_IDS = {
 // Функция для вычисления фона ячейки от белого до красного
 function getGradient(value) {
     const percentage = Math.min(Math.max(value, 0), 100); // Ограничиваем значение от 0 до 100
-    const redValue = (percentage * 2.55).toFixed(0);  // Красный компонент (255 для 100%)
-    return `background-color: rgb(${255 - redValue}, ${255 - redValue}, 255);`; 
+    const redValue = Math.round(percentage * 2.55); // Красный компонент (255 для 100%)
+    const alpha = 0.5; // Значение прозрачности (0 — полностью прозрачно, 1 — непрозрачно)
+    return `background-color: rgba(${redValue}, 0, 0, ${alpha});`; 
 }
 
 // Функция для загрузки данных из таблицы
