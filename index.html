@@ -1,204 +1,208 @@
 <!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Таблицы из Google Sheets</title>
-    <style>
-        /* Стили для вкладок */
-        .tabs {
-            display: flex;
-            cursor: pointer;
-        }
-        .tabs div {
-            padding: 10px;
-            background-color: #f1f1f1;
-            margin-right: 5px;
-            border: 1px solid #ccc;
-        }
-        .tabs div.active {
-            background-color: #ddd;
-        }
-        .tab-content {
-            margin-top: 20px;
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 12px;
-            table-layout: auto;  /* Автоматическая подстройка ширины ячеек под текст */
-            max-height: 400px;  /* Ограничиваем высоту таблицы */
-            overflow-y: auto;  /* Добавляем прокрутку по вертикали, если таблица слишком большая */
-        }
-        table, th, td {
-            border: 1px solid black;
-        }
-        th, td {
-            padding: 10px;
-            text-align: left;
-        }
-        .tour-buttons {
-            margin-top: 20px;
-        }
-        .tour-buttons button {
-            padding: 5px 10px;
-            margin-right: 10px;
-            background-color: #f1f1f1;
-            border: 1px solid #ccc;
-            cursor: pointer;
-        }
-        .tour-buttons button.active {
-            background-color: #ddd;
-        }
-    </style>
-</head>
-<body>
-
-<h1>Таблицы из Google Sheets</h1>
-
-<!-- Вкладки -->
-<div class="tabs" id="tabsContainer"></div>
-
-<!-- Содержимое вкладок -->
-<div id="tab1" class="tab-content">
-    <h2>Таблица 1</h2>
-    <div class="tour-buttons" id="tourButtons1"></div>
-    <table id="dataTable1"></table>
-</div>
-
-<div id="tab2" class="tab-content">
-    <h2>Таблица 2</h2>
-    <div class="tour-buttons" id="tourButtons2"></div>
-    <table id="dataTable2"></table>
-</div>
-
-<div id="tab3" class="tab-content">
-    <h2>Таблица 3</h2>
-    <div class="tour-buttons" id="tourButtons3"></div>
-    <table id="dataTable3"></table>
-</div>
-
-<script>
-// API ключ и ID таблиц
-const API_KEY = 'AIzaSyDwgj7gjevwH4mUSQIH3FqrQw-rDi7YTKg';  // Замените на ваш API ключ
-const SPREADSHEET_ID = '1271UamLKwZULzrdLbAIyh0vSLS_E7gLNb3oa_kLDSGA';  // Замените на ID вашей таблицы
-
-// Функция для получения листов из таблицы
-async function getSheetNames() {
-    const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}?key=${API_KEY}`);
-    const data = await response.json();
-    const sheetNames = data.sheets.map(sheet => sheet.properties.title);
-    return sheetNames;
-}
-
-// Функция для вычисления фона ячейки от белого до красного
-function getGradient(value) {
-    const percentage = Math.min(Math.max(value, 0), 100); // Ограничиваем значение от 0 до 100
-    const redValue = Math.round(percentage * 2.55); // Красный компонент (255 для 100%)
-    const alpha = 0.5; // Значение прозрачности (0 — полностью прозрачно, 1 — непрозрачно)
-    return `background-color: rgba(255, ${255 - redValue}, ${255 - redValue}, ${alpha});`; 
-}
-
-// Функция для загрузки данных из таблицы
-async function fetchData(spreadsheetId, range, tableId) {
-    const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}?key=${API_KEY}`);
-    const data = await response.json();
-
-    const rows = data.values;
-    const table = document.getElementById(tableId);
-    table.innerHTML = ''; // Очистить таблицу перед заполнением
-
-    rows.forEach((row, rowIndex) => {
-        const tr = document.createElement('tr');
-        
-        row.forEach((cell, colIndex) => {
-            const td = document.createElement('td');
-            td.textContent = cell;
-
-            // Применяем фон с градиентом, если значение является числом и это не первая строка
-            if (rowIndex > 0) { // Не применяем стиль к первой строке (заголовок)
-                const numericValue = parseFloat(cell);
-                if (!isNaN(numericValue)) {
-                    td.style = getGradient(numericValue);  // Применяем стиль с цветом
-                }
-            }
-
-            tr.appendChild(td);
-        });
-
-        table.appendChild(tr);
-    });
-}
-
-// Функция для отображения вкладок
-function showTab(tabName) {
-    document.querySelectorAll('.tab-content').forEach(tab => {
-        tab.classList.remove('active');
-    });
-    document.querySelector(`#${tabName}`).classList.add('active');
-
-    // Загружаем данные для соответствующей вкладки
-    fetchData(SPREADSHEET_ID, tabName, `dataTable${tabName.slice(-1)}`);
-}
-
-// Функция для отображения кнопок с номерами туров
-let currentTour = 1;  // Номер текущего тура по умолчанию
-
-function renderTourButtons(tabName) {
-    const tourButtonsContainer = document.getElementById(`tourButtons${tabName.slice(-1)}`);
-    tourButtonsContainer.innerHTML = ''; // Очищаем кнопки перед добавлением новых
-
-    // Допустим, туров у нас 10, можно изменить на любое количество
-    for (let i = 1; i <= 10; i++) {
-        const button = document.createElement('button');
-        button.textContent = `Тур ${i}`;
-        button.addEventListener('click', () => {
-            currentTour = i;
-            showTab(tabName);
-        });
-
-        if (i === currentTour) {
-            button.classList.add('active');
-        }
-
-        tourButtonsContainer.appendChild(button);
-    }
-}
-
-// Инициализация вкладок и динамическое создание кнопок
-async function init() {
-    const sheetNames = await getSheetNames();
-    const tabsContainer = document.getElementById('tabsContainer');
-
-    sheetNames.forEach((sheetName, index) => {
-        const tab = document.createElement('div');
-        tab.textContent = sheetName;
-        tab.classList.add('tab-link');
-        tab.setAttribute('data-tab', `tab${index + 1}`);
-        tab.addEventListener('click', () => {
-            showTab(`tab${index + 1}`);
-        });
-        tabsContainer.appendChild(tab);
-
-        // Создаём пустую вкладку для каждого листа
-        const tabContent = document.createElement('div');
-        tabContent.id = `tab${index + 1}`;
-        tabContent.classList.add('tab-content');
-        document.body.appendChild(tabContent);
-    });
-
-    // Показываем первую вкладку по умолчанию
-    showTab('tab1');
-}
-
-// Запуск инициализации
-init();
-
-</script>
-
-</body>
-</html>
+ <html lang="ru">
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>Таблицы с Google Sheets</title>
+     <title>Таблицы из Google Sheets</title>
+     <style>
+         /* Стили для вкладок */
+         .tabs {
+             display: flex;
+             cursor: pointer;
+         }
+         .tabs div {
+             padding: 10px;
+             background-color: #f1f1f1;
+             margin-right: 5px;
+             border: 1px solid #ccc;
+         }
+         .tabs div.active {
+             background-color: #ddd;
+         }
+         .tab-content {
+             margin-top: 20px;
+             display: none;
+         }
+         .tab-content.active {
+             display: block;
+         }
+         table {
+             width: 100%;
+             border-collapse: collapse;
+             font-size: 12px; 
+             table-layout: auto;  /* Автоматическая подстройка ширины ячеек под текст */
+             max-height: 400px;  /* Ограничиваем высоту таблицы */
+             overflow-y: auto;  /* Добавляем прокрутку по вертикали, если таблица слишком большая */
+         }
+         table, th, td {
+             border: 1px solid black;
+         }
+         th, td {
+             padding: 10px;
+             text-align: left;
+         }
+         .tour-buttons {
+             margin-top: 20px;
+         }
+         .tour-buttons button {
+             padding: 5px 10px;
+             margin-right: 10px;
+             background-color: #f1f1f1;
+             border: 1px solid #ccc;
+             cursor: pointer;
+         }
+         .tour-buttons button.active {
+             background-color: #ddd;
+         }
+     </style>
+ </head>
+ <body>
+ 
+ <h1>Таблицы из Google Sheets</h1>
+ 
+ <!-- Вкладки -->
+ <div class="tabs">
+     <div class="tab-link active" data-tab="tab1">Таблица 1</div>
+     <div class="tab-link" data-tab="tab2">Таблица 2</div>
+     <div class="tab-link" data-tab="tab3">Таблица 3</div>
+ </div>
+ 
+ <!-- Содержимое вкладок -->
+ <div id="tab1" class="tab-content active">
+     <h2>Таблица 1</h2>
+     <div class="tour-buttons" id="tourButtons1"></div>
+     <table id="dataTable1"></table>
+ </div>
+ 
+ <div id="tab2" class="tab-content">
+     <h2>Таблица 2</h2>
+     <div class="tour-buttons" id="tourButtons2"></div>
+     <table id="dataTable2"></table>
+ </div>
+ 
+ <div id="tab3" class="tab-content">
+     <h2>Таблица 3</h2>
+     <div class="tour-buttons" id="tourButtons3"></div>
+     <table id="dataTable3"></table>
+ </div>
+ 
+ <script>
+ // API ключ и ID таблиц
+ const API_KEY = 'AIzaSyDwgj7gjevwH4mUSQIH3FqrQw-rDi7YTKg';  // Замените на ваш API ключ
+ const SPREADSHEET_IDS = {
+     tab1: '1271UamLKwZULzrdLbAIyh0vSLS_E7gLNb3oa_kLDSGA',  // Замените на ID первой таблицы
+     tab2: 'SPREADSHEET_ID_2',  // Замените на ID второй таблицы
+     tab3: 'SPREADSHEET_ID_3'   // Замените на ID третьей таблицы
+ };
+ 
+ // Функция для вычисления фона ячейки от белого до красного
+ function getGradient(value) {
+     const percentage = Math.min(Math.max(value, 0), 100); // Ограничиваем значение от 0 до 100
+     const redValue = Math.round(percentage * 2.55); // Красный компонент (255 для 100%)
+     const alpha = 0.5; // Значение прозрачности (0 — полностью прозрачно, 1 — непрозрачно)
+     return `background-color: rgba(255, ${255 - redValue}, ${255 - redValue}, ${alpha});`; 
+ }
+ 
+ // Функция для загрузки данных из таблицы
+ async function fetchData(spreadsheetId, range, tableId) {
+     const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}?key=${API_KEY}`);
+     const data = await response.json();
+ 
+     const rows = data.values;
+     const table = document.getElementById(tableId);
+     table.innerHTML = ''; // Очистить таблицу перед заполнением
+ 
+     rows.forEach((row, rowIndex) => {
+         const tr = document.createElement('tr');
+         row.forEach(cell => {
+         
+         row.forEach((cell, colIndex) => {
+             const td = document.createElement('td');
+             td.textContent = cell;
+ 
+             // Применяем фон с градиентом, если значение является числом
+             const numericValue = parseFloat(cell);
+             if (!isNaN(numericValue)) {
+                 td.style = getGradient(numericValue);  // Применяем стиль с цветом
+             // Применяем фон с градиентом, если значение является числом и это не первая строка
+             if (rowIndex > 0) { // Не применяем стиль к первой строке (заголовок)
+                 const numericValue = parseFloat(cell);
+                 if (!isNaN(numericValue)) {
+                     td.style = getGradient(numericValue);  // Применяем стиль с цветом
+                 }
+             }
+ 
+             tr.appendChild(td);
+         });
+ 
+         table.appendChild(tr);
+     });
+ }
+ 
+ // Функция для отображения вкладок
+ function showTab(tabName) {
+     document.querySelectorAll('.tab-content').forEach(tab => {
+         tab.classList.remove('active');
+     });
+     document.querySelector(`#${tabName}`).classList.add('active');
+ 
+     // Загружаем данные для соответствующей вкладки
+     if (tabName === 'tab1') {
+         fetchData(SPREADSHEET_IDS.tab1, 'My model', 'dataTable1');
+         fetchData(SPREADSHEET_IDS.tab1, `Tour${currentTour}`, 'dataTable1');
+         renderTourButtons('tab1');
+     } else if (tabName === 'tab2') {
+         fetchData(SPREADSHEET_IDS.tab2, 'My model', 'dataTable2');
+         fetchData(SPREADSHEET_IDS.tab2, `Tour${currentTour}`, 'dataTable2');
+         renderTourButtons('tab2');
+     } else if (tabName === 'tab3') {
+         fetchData(SPREADSHEET_IDS.tab3, 'My model', 'dataTable3');
+         fetchData(SPREADSHEET_IDS.tab3, `Tour${currentTour}`, 'dataTable3');
+         renderTourButtons('tab3');
+     }
+ 
+     // Меняем активный класс на вкладке
+     document.querySelectorAll('.tab-link').forEach(link => {
+         link.classList.remove('active');
+     });
+     document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+ }
+ 
+ // Функция для отображения кнопок с номерами туров
+ let currentTour = 1;  // Номер текущего тура по умолчанию
+ 
+ function renderTourButtons(tabName) {
+     const tourButtonsContainer = document.getElementById(`tourButtons${tabName.slice(-1)}`);
+     tourButtonsContainer.innerHTML = ''; // Очищаем кнопки перед добавлением новых
+ 
+     // Допустим, туров у нас 10, можно изменить на любое количество
+     for (let i = 1; i <= 10; i++) {
+         const button = document.createElement('button');
+         button.textContent = `Тур ${i}`;
+         button.addEventListener('click', () => {
+             currentTour = i;
+             showTab(tabName);
+         });
+ 
+         if (i === currentTour) {
+             button.classList.add('active');
+         }
+ 
+         tourButtonsContainer.appendChild(button);
+     }
+ }
+ 
+ // Обработчики событий для вкладок
+ document.querySelectorAll('.tab-link').forEach(link => {
+     link.addEventListener('click', () => {
+         showTab(link.getAttribute('data-tab'));
+     });
+ });
+ 
+ // Изначально показываем данные для первой вкладки
+ showTab('tab1');
+ </script>
+ 
+ </body>
+ </html>
