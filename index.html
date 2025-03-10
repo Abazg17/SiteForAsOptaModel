@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Таблицы с Google Sheets</title>
+    <title>Таблицы из Google Sheets</title>
     <style>
         /* Стили для вкладок */
         .tabs {
@@ -41,6 +41,19 @@
             padding: 10px;
             text-align: left;
         }
+        .tour-buttons {
+            margin-top: 20px;
+        }
+        .tour-buttons button {
+            padding: 5px 10px;
+            margin-right: 10px;
+            background-color: #f1f1f1;
+            border: 1px solid #ccc;
+            cursor: pointer;
+        }
+        .tour-buttons button.active {
+            background-color: #ddd;
+        }
     </style>
 </head>
 <body>
@@ -57,16 +70,19 @@
 <!-- Содержимое вкладок -->
 <div id="tab1" class="tab-content active">
     <h2>Таблица 1</h2>
+    <div class="tour-buttons" id="tourButtons1"></div>
     <table id="dataTable1"></table>
 </div>
 
 <div id="tab2" class="tab-content">
     <h2>Таблица 2</h2>
+    <div class="tour-buttons" id="tourButtons2"></div>
     <table id="dataTable2"></table>
 </div>
 
 <div id="tab3" class="tab-content">
     <h2>Таблица 3</h2>
+    <div class="tour-buttons" id="tourButtons3"></div>
     <table id="dataTable3"></table>
 </div>
 
@@ -98,18 +114,22 @@ async function fetchData(spreadsheetId, range, tableId) {
 
     rows.forEach((row, rowIndex) => {
         const tr = document.createElement('tr');
-        row.forEach(cell => {
+        
+        row.forEach((cell, colIndex) => {
             const td = document.createElement('td');
             td.textContent = cell;
 
-            // Применяем фон с градиентом, если значение является числом
-            const numericValue = parseFloat(cell);
-            if (!isNaN(numericValue)) {
-                td.style = getGradient(numericValue);  // Применяем стиль с цветом
+            // Применяем фон с градиентом, если значение является числом и это не первая строка
+            if (rowIndex > 0) { // Не применяем стиль к первой строке (заголовок)
+                const numericValue = parseFloat(cell);
+                if (!isNaN(numericValue)) {
+                    td.style = getGradient(numericValue);  // Применяем стиль с цветом
+                }
             }
 
             tr.appendChild(td);
         });
+
         table.appendChild(tr);
     });
 }
@@ -123,11 +143,14 @@ function showTab(tabName) {
 
     // Загружаем данные для соответствующей вкладки
     if (tabName === 'tab1') {
-        fetchData(SPREADSHEET_IDS.tab1, 'My model', 'dataTable1');
+        fetchData(SPREADSHEET_IDS.tab1, `Tour${currentTour}`, 'dataTable1');
+        renderTourButtons('tab1');
     } else if (tabName === 'tab2') {
-        fetchData(SPREADSHEET_IDS.tab2, 'My model', 'dataTable2');
+        fetchData(SPREADSHEET_IDS.tab2, `Tour${currentTour}`, 'dataTable2');
+        renderTourButtons('tab2');
     } else if (tabName === 'tab3') {
-        fetchData(SPREADSHEET_IDS.tab3, 'My model', 'dataTable3');
+        fetchData(SPREADSHEET_IDS.tab3, `Tour${currentTour}`, 'dataTable3');
+        renderTourButtons('tab3');
     }
 
     // Меняем активный класс на вкладке
@@ -135,6 +158,30 @@ function showTab(tabName) {
         link.classList.remove('active');
     });
     document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+}
+
+// Функция для отображения кнопок с номерами туров
+let currentTour = 1;  // Номер текущего тура по умолчанию
+
+function renderTourButtons(tabName) {
+    const tourButtonsContainer = document.getElementById(`tourButtons${tabName.slice(-1)}`);
+    tourButtonsContainer.innerHTML = ''; // Очищаем кнопки перед добавлением новых
+
+    // Допустим, туров у нас 10, можно изменить на любое количество
+    for (let i = 1; i <= 10; i++) {
+        const button = document.createElement('button');
+        button.textContent = `Тур ${i}`;
+        button.addEventListener('click', () => {
+            currentTour = i;
+            showTab(tabName);
+        });
+
+        if (i === currentTour) {
+            button.classList.add('active');
+        }
+
+        tourButtonsContainer.appendChild(button);
+    }
 }
 
 // Обработчики событий для вкладок
