@@ -29,7 +29,7 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 12px; 
+            font-size: 12px;
             table-layout: auto;  /* Автоматическая подстройка ширины ячеек под текст */
             max-height: 400px;  /* Ограничиваем высоту таблицы */
             overflow-y: auto;  /* Добавляем прокрутку по вертикали, если таблица слишком большая */
@@ -61,14 +61,10 @@
 <h1>Таблицы из Google Sheets</h1>
 
 <!-- Вкладки -->
-<div class="tabs">
-    <div class="tab-link active" data-tab="tab1">Таблица 1</div>
-    <div class="tab-link" data-tab="tab2">Таблица 2</div>
-    <div class="tab-link" data-tab="tab3">Таблица 3</div>
-</div>
+<div class="tabs" id="tabsContainer"></div>
 
 <!-- Содержимое вкладок -->
-<div id="tab1" class="tab-content active">
+<div id="tab1" class="tab-content">
     <h2>Таблица 1</h2>
     <div class="tour-buttons" id="tourButtons1"></div>
     <table id="dataTable1"></table>
@@ -89,11 +85,15 @@
 <script>
 // API ключ и ID таблиц
 const API_KEY = 'AIzaSyDwgj7gjevwH4mUSQIH3FqrQw-rDi7YTKg';  // Замените на ваш API ключ
-const SPREADSHEET_IDS = {
-    tab1: '1271UamLKwZULzrdLbAIyh0vSLS_E7gLNb3oa_kLDSGA',  // Замените на ID первой таблицы
-    tab2: 'SPREADSHEET_ID_2',  // Замените на ID второй таблицы
-    tab3: 'SPREADSHEET_ID_3'   // Замените на ID третьей таблицы
-};
+const SPREADSHEET_ID = '1271UamLKwZULzrdLbAIyh0vSLS_E7gLNb3oa_kLDSGA';  // Замените на ID вашей таблицы
+
+// Функция для получения листов из таблицы
+async function getSheetNames() {
+    const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}?key=${API_KEY}`);
+    const data = await response.json();
+    const sheetNames = data.sheets.map(sheet => sheet.properties.title);
+    return sheetNames;
+}
 
 // Функция для вычисления фона ячейки от белого до красного
 function getGradient(value) {
@@ -142,22 +142,7 @@ function showTab(tabName) {
     document.querySelector(`#${tabName}`).classList.add('active');
 
     // Загружаем данные для соответствующей вкладки
-    if (tabName === 'tab1') {
-        fetchData(SPREADSHEET_IDS.tab1, `Tour${currentTour}`, 'dataTable1');
-        renderTourButtons('tab1');
-    } else if (tabName === 'tab2') {
-        fetchData(SPREADSHEET_IDS.tab2, `Tour${currentTour}`, 'dataTable2');
-        renderTourButtons('tab2');
-    } else if (tabName === 'tab3') {
-        fetchData(SPREADSHEET_IDS.tab3, `Tour${currentTour}`, 'dataTable3');
-        renderTourButtons('tab3');
-    }
-
-    // Меняем активный класс на вкладке
-    document.querySelectorAll('.tab-link').forEach(link => {
-        link.classList.remove('active');
-    });
-    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+    fetchData(SPREADSHEET_ID, tabName, `dataTable${tabName.slice(-1)}`);
 }
 
 // Функция для отображения кнопок с номерами туров
@@ -184,15 +169,35 @@ function renderTourButtons(tabName) {
     }
 }
 
-// Обработчики событий для вкладок
-document.querySelectorAll('.tab-link').forEach(link => {
-    link.addEventListener('click', () => {
-        showTab(link.getAttribute('data-tab'));
-    });
-});
+// Инициализация вкладок и динамическое создание кнопок
+async function init() {
+    const sheetNames = await getSheetNames();
+    const tabsContainer = document.getElementById('tabsContainer');
 
-// Изначально показываем данные для первой вкладки
-showTab('tab1');
+    sheetNames.forEach((sheetName, index) => {
+        const tab = document.createElement('div');
+        tab.textContent = sheetName;
+        tab.classList.add('tab-link');
+        tab.setAttribute('data-tab', `tab${index + 1}`);
+        tab.addEventListener('click', () => {
+            showTab(`tab${index + 1}`);
+        });
+        tabsContainer.appendChild(tab);
+
+        // Создаём пустую вкладку для каждого листа
+        const tabContent = document.createElement('div');
+        tabContent.id = `tab${index + 1}`;
+        tabContent.classList.add('tab-content');
+        document.body.appendChild(tabContent);
+    });
+
+    // Показываем первую вкладку по умолчанию
+    showTab('tab1');
+}
+
+// Запуск инициализации
+init();
+
 </script>
 
 </body>
