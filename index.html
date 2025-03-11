@@ -73,7 +73,7 @@ function getGradient(value) {
     if (isNaN(value)) return '';
     value = Math.max(0, Math.min(value, 100)) / 100; // Нормализация (0-100)
     const red = Math.round(value * 255);
-    return background-color: rgba(255, ${255 - red}, ${255 - red}, 0.5);;
+    return `background-color: rgba(255, ${255 - red}, ${255 - red}, 0.5);`;
 }
 
 // Получение названий листов
