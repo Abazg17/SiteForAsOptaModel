@@ -1,153 +1,130 @@
 <!DOCTYPE html>
- <html lang="ru">
- <head>
-     <meta charset="UTF-8">
-     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-     <title>Таблицы с Google Sheets</title>
-     <style>
-         /* Стили для вкладок */
-         .tabs {
-             display: flex;
-             cursor: pointer;
-         }
-         .tabs div {
-             padding: 10px;
-             background-color: #f1f1f1;
-             margin-right: 5px;
-             border: 1px solid #ccc;
-         }
-         .tabs div.active {
-             background-color: #ddd;
-         }
-         .tab-content {
-             margin-top: 20px;
-             display: none;
-         }
-         .tab-content.active {
-             display: block;
-         }
-         table {
-             width: 100%;
-             border-collapse: collapse;
-             font-size: 12px; 
-             table-layout: auto;  /* Автоматическая подстройка ширины ячеек под текст */
-             max-height: 400px;  /* Ограничиваем высоту таблицы */
-             overflow-y: auto;  /* Добавляем прокрутку по вертикали, если таблица слишком большая */
-             font-size: 12px; 
-         }
-         table, th, td {
-             border: 1px solid black;
-         }
-         th, td {
-             padding: 10px;
-             text-align: left;
-         }
-     </style>
- </head>
- <body>
- 
- <h1>Таблицы из Google Sheets</h1>
- 
- <!-- Вкладки -->
- <div class="tabs">
-     <div class="tab-link active" data-tab="tab1">Таблица 1</div>
-     <div class="tab-link" data-tab="tab2">Таблица 2</div>
-     <div class="tab-link" data-tab="tab3">Таблица 3</div>
- </div>
- 
- <!-- Содержимое вкладок -->
- <div id="tab1" class="tab-content active">
-     <h2>Таблица 1</h2>
-     <table id="dataTable1"></table>
- </div>
- 
- <div id="tab2" class="tab-content">
-     <h2>Таблица 2</h2>
-     <table id="dataTable2"></table>
- </div>
- 
- <div id="tab3" class="tab-content">
-     <h2>Таблица 3</h2>
-     <table id="dataTable3"></table>
- </div>
- 
- <script>
- // API ключ и ID таблиц
- const API_KEY = 'AIzaSyDwgj7gjevwH4mUSQIH3FqrQw-rDi7YTKg';  // Замените на ваш API ключ
- const SPREADSHEET_IDS = {
-     tab1: '1271UamLKwZULzrdLbAIyh0vSLS_E7gLNb3oa_kLDSGA',  // Замените на ID первой таблицы
-     tab2: 'SPREADSHEET_ID_2',  // Замените на ID второй таблицы
-     tab3: 'SPREADSHEET_ID_3'   // Замените на ID третьей таблицы
- };
- 
- // Функция для вычисления фона ячейки от белого до красного
- function getGradient(value) {
-     const percentage = Math.min(Math.max(value, 0), 100); // Ограничиваем значение от 0 до 100
-     const redValue = Math.round(percentage * 2.55); // Красный компонент (255 для 100%)
-     const alpha = 0.5; // Значение прозрачности (0 — полностью прозрачно, 1 — непрозрачно)
-     return `background-color: rgba(255, ${255 - redValue}, ${255 - redValue}, ${alpha});`; 
- }
- 
- // Функция для загрузки данных из таблицы
- async function fetchData(spreadsheetId, range, tableId) {
-     const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}?key=${API_KEY}`);
-     const data = await response.json();
- 
-     const rows = data.values;
-     const table = document.getElementById(tableId);
-     table.innerHTML = ''; // Очистить таблицу перед заполнением
- 
-     rows.forEach((row, rowIndex) => {
-         const tr = document.createElement('tr');
-         row.forEach(cell => {
-             const td = document.createElement('td');
-             td.textContent = cell;
- 
-             // Применяем фон с градиентом, если значение является числом
-             const numericValue = parseFloat(cell);
-             if (!isNaN(numericValue)) {
-                 td.style = getGradient(numericValue);  // Применяем стиль с цветом
-             }
- 
-             tr.appendChild(td);
-         });
-         table.appendChild(tr);
-     });
- }
- 
- // Функция для отображения вкладок
- function showTab(tabName) {
-     document.querySelectorAll('.tab-content').forEach(tab => {
-         tab.classList.remove('active');
-     });
-     document.querySelector(`#${tabName}`).classList.add('active');
- 
-     // Загружаем данные для соответствующей вкладки
-     if (tabName === 'tab1') {
-         fetchData(SPREADSHEET_IDS.tab1, 'My model', 'dataTable1');
-     } else if (tabName === 'tab2') {
-         fetchData(SPREADSHEET_IDS.tab2, 'My model', 'dataTable2');
-     } else if (tabName === 'tab3') {
-         fetchData(SPREADSHEET_IDS.tab3, 'My model', 'dataTable3');
-     }
- 
-     // Меняем активный класс на вкладке
-     document.querySelectorAll('.tab-link').forEach(link => {
-         link.classList.remove('active');
-     });
-     document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
- }
- 
- // Обработчики событий для вкладок
- document.querySelectorAll('.tab-link').forEach(link => {
-     link.addEventListener('click', () => {
-         showTab(link.getAttribute('data-tab'));
-     });
- });
- 
- // Изначально показываем данные для первой вкладки
- showTab('tab1');
- </script>
- 
- </body>
- </html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Таблицы с переключением листов</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-link { padding: 10px; border: 1px solid #ccc; cursor: pointer; background: #f8f8f8; }
+        .tab-link.active { background: #ddd; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        #sheetButtons { margin-bottom: 20px; }
+        button { margin-right: 5px; padding: 8px; cursor: pointer; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ccc; padding: 5px; text-align: left; }
+        th { background: #f2f2f2; }
+    </style>
+</head>
+<body>
+
+    <!-- Вкладки для переключения между таблицами -->
+    <div class="tabs">
+        <div class="tab-link active" data-tab="tab1">Таблица 1</div>
+        <div class="tab-link" data-tab="tab2">Таблица 2</div>
+        <div class="tab-link" data-tab="tab3">Таблица 3</div>
+    </div>
+
+    <!-- Контейнеры для отображения данных -->
+    <div id="tab1" class="tab-content active">
+        <div id="sheetButtons"></div>
+        <table id="dataTable1"></table>
+    </div>
+    <div id="tab2" class="tab-content">
+        <div id="sheetButtons"></div>
+        <table id="dataTable2"></table>
+    </div>
+    <div id="tab3" class="tab-content">
+        <div id="sheetButtons"></div>
+        <table id="dataTable3"></table>
+    </div>
+
+    <script>
+        // API ключ и ID таблиц
+        const API_KEY = 'YOUR_GOOGLE_SHEETS_API_KEY';  // 🔹 Замени на свой API ключ
+        const SPREADSHEET_IDS = {
+            tab1: 'SPREADSHEET_ID_1',  // 🔹 Замени на ID первой таблицы
+            tab2: 'SPREADSHEET_ID_2',
+            tab3: 'SPREADSHEET_ID_3'
+        };
+
+        let currentTab = 'tab1'; // Текущая активная вкладка
+        let currentSheet = '';   // Текущий активный лист
+
+        // Функция для загрузки всех листов в текущей таблице
+        async function fetchSheetsList(spreadsheetId) {
+            const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?key=${API_KEY}`);
+            const data = await response.json();
+            
+            const sheets = data.sheets.map(sheet => sheet.properties.title); // Получаем названия листов
+            createSheetButtons(sheets);
+        }
+
+        // Функция для создания кнопок для листов
+        function createSheetButtons(sheets) {
+            const container = document.querySelector(`#${currentTab} #sheetButtons`);
+            container.innerHTML = ''; // Очистка перед созданием новых кнопок
+
+            sheets.forEach(sheetName => {
+                const button = document.createElement('button');
+                button.textContent = sheetName;
+                button.onclick = () => fetchData(SPREADSHEET_IDS[currentTab], sheetName, `dataTable${currentTab.charAt(3)}`);
+                container.appendChild(button);
+            });
+
+            // Загружаем первый лист по умолчанию
+            if (sheets.length > 0) {
+                currentSheet = sheets[0];
+                fetchData(SPREADSHEET_IDS[currentTab], currentSheet, `dataTable${currentTab.charAt(3)}`);
+            }
+        }
+
+        // Функция для загрузки данных из Google Sheets
+        async function fetchData(spreadsheetId, sheetName, tableId) {
+            currentSheet = sheetName; // Обновляем текущий активный лист
+
+            const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}?key=${API_KEY}`);
+            const data = await response.json();
+
+            const rows = data.values;
+            const table = document.getElementById(tableId);
+            table.innerHTML = ''; // Очистить таблицу перед заполнением
+
+            rows.forEach((row, rowIndex) => {
+                const tr = document.createElement('tr');
+                row.forEach(cell => {
+                    const td = document.createElement(rowIndex === 0 ? 'th' : 'td'); // Первая строка - заголовок
+                    td.textContent = cell;
+                    tr.appendChild(td);
+                });
+                table.appendChild(tr);
+            });
+        }
+
+        // Функция для переключения вкладок
+        function showTab(tabName) {
+            currentTab = tabName; // Обновляем текущую вкладку
+
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+
+            document.querySelectorAll('.tab-link').forEach(link => link.classList.remove('active'));
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+
+            // Загружаем список листов для текущей вкладки
+            fetchSheetsList(SPREADSHEET_IDS[tabName]);
+        }
+
+        // Обработчики для вкладок
+        document.querySelectorAll('.tab-link').forEach(link => {
+            link.addEventListener('click', () => showTab(link.getAttribute('data-tab')));
+        });
+
+        // Изначально загружаем данные для первой вкладки
+        showTab('tab1');
+    </script>
+
+</body>
+</html>
