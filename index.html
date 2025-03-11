@@ -41,37 +41,25 @@
 </head>
 <body>
 
-<h1>Таблицы из Google Sheets</h1>
+<h1>Таблицы из аналога модели OPTA</h1>
 
 <!-- Кнопки для выбора таблицы -->
 <div class="tabs">
-    <div class="tab-link active" data-tab="tab1">Таблица 1</div>
-    <div class="tab-link" data-tab="tab2">Таблица 2</div>
-    <div class="tab-link" data-tab="tab3">Таблица 3</div>
+    <div class="tab-link active" data-tab="tab1">Испания</div>
+    <div class="tab-link" data-tab="tab2">Россия</div>
+    <div class="tab-link" data-tab="tab3">Италия</div>
 </div>
 
 <!-- Кнопки для выбора листа (будут обновляться динамически) -->
 <div class="sheets"></div>
 
-<!-- Таблицы -->
-<div id="tab1" class="tab-content active">
-    <h2>Таблица 1</h2>
-    <table id="dataTable"></table>
-</div>
-<div id="tab2" class="tab-content">
-    <h2>Таблица 2</h2>
-    <table id="dataTable"></table>
-</div>
-<div id="tab3" class="tab-content">
-    <h2>Таблица 3</h2>
-    <table id="dataTable"></table>
-</div>
+<div id="currentSelection" style="font-size: 18px; margin-bottom: 10px;"></div>
 
 <script>
 const API_KEY = 'AIzaSyDwgj7gjevwH4mUSQIH3FqrQw-rDi7YTKg';  // Замените на ваш API ключ
 const SPREADSHEET_IDS = {
     tab1: '1Lrf-7kjmaSmpBicMhk9_Jw_g7g_NPOrNBgrxzbJpeD0',  // Замените на ID первой таблицы
-    tab2: 'SPREADSHEET_ID_2',
+    tab2: '1riRdgkzvsBjFd3KD0he9FDmlo_sbl2Q1f6bRay3ViGg',
     tab3: 'SPREADSHEET_ID_3'
 };
 
@@ -79,8 +67,8 @@ let currentTab = 'tab1';
 let currentSheet = '';
 // Функция для вычисления фона ячейки от белого до красного
 function getGradient(value) {
-    const percentage = Math.min(Math.max(value, 0), 100); // Ограничиваем значение от 0 до 100
-    const redValue = Math.round(percentage * 2.55); // Красный компонент (255 для 100%)
+    const percentage = Math.min(Math.max(value, 0), 1); // Ограничиваем значение от 0 до 100
+    const redValue = Math.round(percentage * 255); // Красный компонент (255 для 100%)
     const alpha = 0.5; // Значение прозрачности (0 — полностью прозрачно, 1 — непрозрачно)
     return `background-color: rgba(255, ${255 - redValue}, ${255 - redValue}, ${alpha});`; 
 }
@@ -141,12 +129,34 @@ async function fetchData(spreadsheetId, sheetName) {
     }
 }
 
+// Функция обновления заголовка текущей лиги и тура
+function updateCurrentSelection() {
+    const league = document.querySelector('.tab-link.active').textContent;
+    const round = document.querySelector('.sheet-link.active')?.textContent || 'Выберите тур';
+    document.getElementById('currentSelection').textContent = `Лига: ${league}, Тур: ${round}`;
+}
+    
+function showTab(tabName) {
+    currentTab = tabName;
 
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.getElementById(tabName).classList.add('active');
 
-// Функция для отображения кнопок листов
+    document.querySelectorAll('.tab-link').forEach(link => {
+        link.classList.remove('active');
+    });
+    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+
+    showSheets(tabName);
+    updateCurrentSelection();
+}
+
+// Обновление заголовка при смене тура
 async function showSheets(tabName) {
     const sheetsContainer = document.querySelector('.sheets');
-    sheetsContainer.innerHTML = ''; // Очищаем старые кнопки
+    sheetsContainer.innerHTML = '';
 
     const spreadsheetId = SPREADSHEET_IDS[tabName];
     const sheets = await getSheetNames(spreadsheetId);
@@ -165,30 +175,15 @@ async function showSheets(tabName) {
             sheetBtn.classList.add('active');
             currentSheet = sheet;
             fetchData(spreadsheetId, sheet);
+            updateCurrentSelection();
         });
         sheetsContainer.appendChild(sheetBtn);
     });
 
     if (sheets.length > 0) {
-        fetchData(spreadsheetId, sheets[0]); // Загружаем первый лист по умолчанию
+        fetchData(spreadsheetId, sheets[0]);
+        updateCurrentSelection();
     }
-}
-
-// Функция для отображения выбранной таблицы
-function showTab(tabName) {
-    currentTab = tabName;
-
-    document.querySelectorAll('.tab-content').forEach(tab => {
-        tab.classList.remove('active');
-    });
-    document.getElementById(tabName).classList.add('active');
-
-    document.querySelectorAll('.tab-link').forEach(link => {
-        link.classList.remove('active');
-    });
-    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-
-    showSheets(tabName);
 }
 
 // Обработчики кликов по вкладкам таблиц
