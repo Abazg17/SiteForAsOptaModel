@@ -85,7 +85,6 @@
       const percentage = Math.min(Math.max(value, 0), 100); // Ограничиваем значение от 0 до 100
       const redValue = Math.round(percentage * 2.55); // Красный компонент (255 для 100%)
       const alpha = 0.5; // Значение прозрачности (0 — полностью прозрачно, 1 — непрозрачно)
-      return `background-color: rgba(${redValue}, 0, 0, ${alpha});`; 
       return `background-color: rgba(255, ${255 - redValue}, ${255 - redValue}, ${alpha});`; 
   }
  
@@ -105,9 +104,11 @@
               td.textContent = cell;
  
               // Применяем фон с градиентом, если значение является числом
-              const numericValue = parseFloat(cell);
-              if (!isNaN(numericValue)) {
-                  td.style = getGradient(numericValue);  // Применяем стиль с цветом
+              if (rowIndex > 0) {              
+                const numericValue = parseFloat(cell);
+                if (!isNaN(numericValue)) {
+                    td.style = getGradient(numericValue);  // Применяем стиль с цветом
+                 }
               }
  
               tr.appendChild(td);
