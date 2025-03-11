@@ -62,7 +62,7 @@ const API_KEY = 'AIzaSyDwgj7gjevwH4mUSQIH3FqrQw-rDi7YTKg';
 const SPREADSHEET_IDS = {
     tab1: '1Lrf-7kjmaSmpBicMhk9_Jw_g7g_NPOrNBgrxzbJpeD0',
     tab2: '1riRdgkzvsBjFd3KD0he9FDmlo_sbl2Q1f6bRay3ViGg',
-    tab3: 'SPREADSHEET_ID_3'
+    tab3: '1Fi-ys1N6mDWz9v5Tivk6F5oPOrY_-1s4fGOKgxjSCu8'
 };
 
 let currentTab = 'tab1';
@@ -91,11 +91,15 @@ async function getSheetNames(spreadsheetId) {
 // Загрузка данных
 async function fetchData(spreadsheetId, sheetName) {
     try {
+        // Показываем индикатор загрузки
+        document.getElementById('currentSelection').textContent = `Загрузка данных...`;
+
         const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}?key=${API_KEY}`);
         const data = await response.json();
 
         if (!data.values || data.values.length === 0) {
             console.error(`Лист ${sheetName} пуст или не найден.`);
+            document.getElementById('currentSelection').textContent = `Ошибка загрузки данных`;
             return;
         }
 
@@ -123,10 +127,15 @@ async function fetchData(spreadsheetId, sheetName) {
             table.appendChild(tr);
         });
 
+        // Активируем кнопку только после успешной загрузки данных
+        document.querySelectorAll('.sheet-link').forEach(btn => btn.classList.remove('active'));
+        document.querySelector(`.sheet-link:contains("${sheetName}")`).classList.add('active');
+
         updateCurrentSelection();
         console.log(`Данные загружены: ${sheetName}`);
     } catch (error) {
         console.error("Ошибка загрузки данных:", error);
+        document.getElementById('currentSelection').textContent = `Ошибка загрузки данных`;
     }
 }
 
@@ -162,19 +171,21 @@ async function showSheets(tabName) {
     sheets.forEach((sheet, index) => {
         const sheetBtn = document.createElement('div');
         sheetBtn.classList.add('sheet-link');
-        if (index === 0) sheetBtn.classList.add('active');
         sheetBtn.textContent = sheet;
-        sheetBtn.addEventListener('click', () => {
+        sheetBtn.addEventListener('click', async () => {
+            // Убираем активный класс со всех кнопок
             document.querySelectorAll('.sheet-link').forEach(btn => btn.classList.remove('active'));
+            // Загружаем данные
+            await fetchData(spreadsheetId, sheet);
+            // Активируем кнопку только после успешной загрузки
             sheetBtn.classList.add('active');
-            currentSheet = sheet;
-            fetchData(spreadsheetId, sheet);
             updateCurrentSelection();
         });
         sheetsContainer.appendChild(sheetBtn);
     });
 
-    fetchData(spreadsheetId, currentSheet);
+    // Загружаем данные для первого листа
+    await fetchData(spreadsheetId, currentSheet);
 }
 
 // Обработчики кликов по лигам
