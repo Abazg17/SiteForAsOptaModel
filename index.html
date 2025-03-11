@@ -70,7 +70,7 @@
 <script>
 const API_KEY = 'AIzaSyDwgj7gjevwH4mUSQIH3FqrQw-rDi7YTKg';  // Замените на ваш API ключ
 const SPREADSHEET_IDS = {
-    tab1: '1271UamLKwZULzrdLbAIyh0vSLS_E7gLNb3oa_kLDSGA',  // Замените на ID первой таблицы
+    tab1: '1Lrf-7kjmaSmpBicMhk9_Jw_g7g_NPOrNBgrxzbJpeD0',  // Замените на ID первой таблицы
     tab2: 'SPREADSHEET_ID_2',
     tab3: 'SPREADSHEET_ID_3'
 };
@@ -106,9 +106,17 @@ async function fetchData(spreadsheetId, sheetName) {
 
     data.values.forEach((row, rowIndex) => {
         const tr = document.createElement('tr');
-        row.forEach(cell => {
+        row.forEach((cell, cellIndex) => {
             const td = document.createElement(rowIndex === 0 ? 'th' : 'td');
             td.textContent = cell;
+
+            // Применяем фон с градиентом, если значение является числом и это не первые 4 столбца
+            if (rowIndex > 0 && cellIndex >= 4) {              
+                const numericValue = parseFloat(cell);
+                if (!isNaN(numericValue)) {
+                    td.style = getGradient(numericValue);  // Применяем стиль с цветом
+                }
+            }
             tr.appendChild(td);
         });
         table.appendChild(tr);
